@@ -1,7 +1,8 @@
 import sys
 
+import qdarktheme
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QIcon, Qt
+from PySide6.QtGui import QIcon, Qt, QAction
 from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QMainWindow, QPushButton, QVBoxLayout,
                                QWidget, QTabWidget, QSizePolicy)
 
@@ -17,6 +18,16 @@ class Window(QMainWindow):
         self.Width = 800
         self.height = int(0.618 * self.Width)
         self.resize(self.Width, self.height)
+
+        # Menu Bar
+        menubar = self.menuBar()
+        file_menu = menubar.addMenu('Import')
+
+        exit_action = QAction('Expenses', self)
+        exit_action.triggered.connect(self.import_expenses)
+        file_menu.addAction(exit_action)
+
+        self.exp_widget = Expenses.Expenses()
 
         self.btn_1 = QPushButton(self)
         self.btn_2 = QPushButton(self)
@@ -38,7 +49,16 @@ class Window(QMainWindow):
 
         investment_icon = QIcon('investment.png')
         self.btn_3.setIcon(investment_icon)
-        self.btn_3.setStyleSheet("QPushButton { align: center; }")
+        self.btn_3.setStyleSheet(
+            """
+            QPushButton {
+                align: left;
+            }
+            QPushButton:hover {
+                background-color: #4e5157;
+            }
+            """
+        )
         self.btn_3.setIconSize(QSize(50, 50))
         self.btn_3.setFixedSize(50, 50)
         self.btn_3.setStyleSheet("border: none;")
@@ -103,7 +123,7 @@ class Window(QMainWindow):
         main_widget = QWidget()
         # main_widget.setStyleSheet("background-color: #000000; color: white; border: none;")
         main_widget.setStyleSheet(
-            ("*{color: qlineargradient(spread:pad, x1:0 y1:0, x2:1 y2:0, stop:0 rgba(0, 0, 0, 255), "
+            ("*{color: qlineargradient(spread: pad, x1: 0 y1: 0, x2: 1 y2: 0, stop:0 rgba(0, 0, 0, 255), "
              "stop:1 rgba(255, 255, 255, 255)); "
              "background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #191b1f, "
              "stop:1 #191b1f, stop:2 #282c2f); color: white; border: none}"))
@@ -113,6 +133,9 @@ class Window(QMainWindow):
 
     def button1(self):
         self.right_widget.setCurrentIndex(0)
+
+    def import_expenses(self):
+        Expenses.Expenses.import_(self.exp_widget)
 
     def button2(self):
         self.right_widget.setCurrentIndex(1)
@@ -126,8 +149,8 @@ class Window(QMainWindow):
     @staticmethod
     def expenses(self):
         main_layout = QVBoxLayout()
-        exp_widget = Expenses.Expenses()
-        main_layout.addWidget(exp_widget)
+
+        main_layout.addWidget(self.exp_widget)
         main = QWidget()
         main.setLayout(main_layout)
         return main
@@ -153,6 +176,7 @@ class Window(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    qdarktheme.setup_theme("dark")
     ex = Window()
     ex.showMaximized()
     ex.show()

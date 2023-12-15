@@ -1,11 +1,13 @@
+import csv
 import sqlite3
 
 from PySide6 import QtCore
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QPainter, QBrush, QColor
-from PySide6.QtWidgets import (QHeaderView, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout,
-                               QWidget, QDateEdit, QComboBox)
-from PySide6.QtCharts import QChartView, QPieSeries , QChart
+from PySide6.QtWidgets import (QHeaderView, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
+                               QVBoxLayout,
+                               QWidget, QDateEdit, QComboBox, QDockWidget, QFileDialog, QMessageBox)
+from PySide6.QtCharts import QChartView, QPieSeries, QChart
 from tkinter import messagebox
 
 
@@ -31,18 +33,14 @@ class Expenses(QWidget):
                 is_income INTEGER
             )"""
         )
-       # self.cursor.execute("ALTER TABLE expenses ADD COLUMN is_income INTEGER")
+        # self.cursor.execute("ALTER TABLE expenses ADD COLUMN is_income INTEGER")
 
         self.connection.commit()
 
         # Left Widget
         self.table = QTableWidget()
-        self.table.setStyleSheet(
-            "* {background: qlineargradient(x1:0 y1:0, x2:1 y2:0, stop:0 #181a1e, stop:1 #282c2f); color: white;}"
-            "QHeaderView::section {color: #C1D7F0; background-color: #191b1f; border: none}"  # Change the heading text color to red
-        )
 
-        #self.table.setStyleSheet("QTableView {background-color: #1a1c20; color: white;}""QHeaderView::section {background-color: #161618; color: white;}")
+        # self.table.setStyleSheet("QTableView {background-color: #1a1c20; color: white;}""QHeaderView::section {background-color: #161618; color: white;}")
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Description", "Price", "Payment Mode", "Date"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -54,12 +52,12 @@ class Expenses(QWidget):
         # Right Widget
         self.description = QLineEdit()
         self.description.setStyleSheet(
-    "QLineEdit {"
-    "   border-radius: 10px;"
-    "   padding: 5px;"
-    "background-color: #282c2f;"
-    "}"
-)
+            "QLineEdit {"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "background-color: #282c2f;"
+            "}"
+        )
         self.price = QLineEdit()
         self.price.setStyleSheet(
             "QLineEdit {"
@@ -126,6 +124,8 @@ class Expenses(QWidget):
         # Disabling 'Add' button
         self.add.setEnabled(False)
 
+        self.right_dock = QDockWidget(self)
+        self.right_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable)
         self.right = QVBoxLayout()
         self.right.addWidget(QLabel("Sort By:"))
         self.right.addWidget(self.sortby)
@@ -141,10 +141,15 @@ class Expenses(QWidget):
         self.right.addWidget(self.add)
         self.right.addWidget(self.chart_view)
 
+        dock_contents = QWidget()
+        dock_contents.setLayout(self.right)
+        self.right_dock.setWidget(dock_contents)
+
         # QWidget Layout
         self.layout = QHBoxLayout()
         self.layout.addWidget(self.table)
-        self.layout.addLayout(self.right)
+        self.layout.addWidget(self.right_dock)
+        #self.layout.addLayout(self.right)
 
         self.setLayout(self.layout)
 
@@ -201,6 +206,45 @@ class Expenses(QWidget):
             self.plot_data()
         except ValueError:
             messagebox.showerror("Invalid Price!", "Invalid Price:", price, "Make sure to enter a valid price!")
+
+    def import_(self):
+
+        reply = QMessageBox.question(self, 'Wait a Min!', 'Are the column names included in the file>?', QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                     QMessageBox.StandardButton.No)
+
+        if reply == QMessageBox.StandardButton.Yes:
+            fileName, _ = QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv);;All Files (*)")
+            if fileName:
+                print(fileName)
+                with open(fileName, 'r') as f:
+                    reader = csv.reader(f)
+                    columns = next(reader)
+                    query = 'insert into expenses({0}) values ({1})'
+                    query = query.format(','.join(columns), ','.join('?' * len(columns)))
+                    cursor = self.connection.cursor()
+                    for data in reader:
+                        cursor.execute(query, data)
+                    cursor.commit()
+            else:
+                pass
+        else:
+            fileName, _ = QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv);;All Files (*)")
+            if fileName:
+                print(fileName)
+                with open(fileName, 'r') as f:
+                    reader = csv.reader(f)
+                    data = next(reader)
+                    query = 'insert into expenses values ({0})'
+                    query = query.format(','.join('?' * len(data)))
+                    cursor = self.connection.cursor()
+                    cursor.execute(query, data)
+                    for data in reader:
+                        cursor.execute(query, data)
+                    cursor.commit()
+            else:
+                pass
+
+
 
     @Slot()
     def check_disable(self, x):

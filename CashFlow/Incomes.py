@@ -30,21 +30,14 @@ class Incomes(QWidget):
 
         # Left Widget
         self.table = QTableWidget()
-        self.table.setStyleSheet(
-            "* {background: qlineargradient(x1:0 y1:0, x2:1 y2:0, stop:0 #181a1e, stop:1 #282c2f); color: white;}"
-            "QHeaderView::section {color: #C1D7F0; background-color: #191b1f; border: none}"  # Change the heading text color to red
-        )
+
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Description", "Price", "Payment Mode", "Date"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         # Chart
         self.chart_view = QChartView()
-        self.table.setStyleSheet(
-            "* {background: qlineargradient(x1:0 y1:0, x2:1 y2:0, stop:0 #181a1e, stop:1 #282c2f); color: white;}"
-            "QHeaderView::section {color: #C1D7F0; background-color: #191b1f; border: none}"
-            # Change the heading text color to red
-        )
+
 
         self.chart_view.setRenderHint(QPainter.Antialiasing)
 
