@@ -1,14 +1,111 @@
+import json
 import sys
 
-#import qdarktheme
+import qdarktheme
+# import qdarktheme
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon, Qt, QAction
 from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QMainWindow, QPushButton, QVBoxLayout,
-                               QWidget, QTabWidget, QSizePolicy)
+                               QWidget, QTabWidget, QSizePolicy, QDockWidget, QComboBox, QLineEdit, QMessageBox,
+                               QCheckBox)
 from qt_material import apply_stylesheet
 import Expenses
 import Incomes
 import Investments
+
+with open("config.json", "r") as themes_file:
+    _themes = json.load(themes_file)
+
+
+class ConfigPage(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.json_data = {"editor_theme": "", "margin_theme": "", "lines_theme": ""}
+
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+        layout.addStretch()
+        # layout.addSpacing(100)
+
+        theme_label1 = QLabel("Theme :")
+        theme_label2 = QLabel("Theming :")
+        self.theme_combobox = QComboBox()
+        # self.theme_combobox.setCurrentText(self._window._themes["font"])
+        theme_opt = ['dark_amber',
+                     'dark_blue',
+                     'dark_cyan',
+                     'dark_lightgreen',
+                     'dark_pink',
+                     'dark_purple',
+                     'dark_red',
+                     'dark_teal',
+                     'dark_yellow',
+                     'light_amber',
+                     'light_blue',
+                     'light_cyan',
+                     'light_cyan_500',
+                     'light_lightgreen',
+                     'light_pink',
+                     'light_purple',
+                     'light_red',
+                     'light_teal',
+                     'light_yellow']
+        self.theme_combobox.addItems(theme_opt)
+
+        self.theming_combobox = QComboBox()
+        # self.theme_combobox.setCurrentText(self._window._themes["font"])
+        theming_opt = ['Material (Default)', 'Flat Dark (compatibility issues on Python >=3.11)']
+        self.theming_combobox.addItems(theming_opt)
+
+        # current_font_theme = self._window._themes.get("font", "")
+        self.theming_combobox.setCurrentText(_themes["theming"])
+        layout.addWidget(theme_label1)
+        layout.addWidget(self.theme_combobox)
+        layout.addWidget(theme_label2)
+        layout.addWidget(self.theming_combobox)
+
+        self.invert_secondary = QCheckBox("Invert Secondary (For Light Mode): ")
+        if _themes["invert"] == "true":
+            self.invert_secondary.setChecked(True)
+        else:
+            pass
+        layout.addWidget(self.invert_secondary)
+
+        # Save Button
+        save_button = QPushButton("Apply")
+        save_button.setStyleSheet(
+            "QPushButton {"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "background-color: #121212;"
+            "color: white;"
+            "}"
+        )
+        save_button.clicked.connect(self.save_json)
+        layout.addWidget(save_button)
+
+        self.setLayout(layout)
+        self.setWindowTitle("Settings")
+
+    def save_json(self):
+        _themes["theme_type"] = self.theme_combobox.currentText()
+        if self.invert_secondary.isChecked():
+            _themes["invert"] = "true"
+        else:
+            _themes["invert"] = "false"
+        _themes["theming"] = self.theming_combobox.currentText()
+
+        with open("config.json", "w") as json_file:
+            json.dump(_themes, json_file)
+
+        QMessageBox.information(
+            self,
+            "Settings Applied!",
+            "The chosen settings have been applied. Restart Aura Text to see the changes.",
+        )
 
 
 class Window(QMainWindow):
@@ -30,7 +127,7 @@ class Window(QMainWindow):
         file_menu.addAction(expense_action)
 
         config_action = QAction('Preferences', self)
-        config_action.triggered.connect(self.import_expenses)
+        config_action.triggered.connect(self.preferences)
         menubar.addAction(config_action)
 
         self.exp_widget = Expenses.Expenses()
@@ -89,7 +186,7 @@ class Window(QMainWindow):
         left_layout = QVBoxLayout()
         left_widget = QWidget()
         left_widget.setFixedWidth(1)
-        #left_widget.setLayout(left_layout)
+        # left_widget.setLayout(left_layout)
         left_layout.addWidget(left_widget)
 
         left_layout.addWidget(self.btn_1)
@@ -144,7 +241,14 @@ class Window(QMainWindow):
         Expenses.Expenses.import_(self.exp_widget)
 
     def preferences(self):
-        
+        config_dock = QDockWidget("Preferences", self)
+        config_dock.setMinimumWidth(200)
+
+        self.settings_widget = ConfigPage()
+        self.settings_layout = QVBoxLayout(self.settings_widget)
+        self.settings_layout.addWidget(self.settings_widget)
+        config_dock.setWidget(self.settings_widget)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, config_dock)
 
     def button2(self):
         self.right_widget.setCurrentIndex(1)
@@ -183,10 +287,29 @@ class Window(QMainWindow):
         return main
 
 
+extra = {
+    # Button colors
+    'danger': '#dc3545',
+    'warning': '#ffc107',
+    'success': '#17a2b8',
+    # Font
+    'font_family': 'Consolas',
+}
+
+inversion = False
+if _themes["invert"] == "true":
+    inversion = True
+else:
+    inversion = False
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    #qdarktheme.setup_theme("dark")
-    apply_stylesheet(app, theme='dark_teal.xml')
+    theme = (_themes["theme_type"] + ".xml")
+    theming = _themes["theming"]
+    if theming == "Flat Dark (compatibility issues on Python >=3.11)":
+        qdarktheme.setup_theme("dark")
+    elif theming == "Material (Default)":
+        apply_stylesheet(app, theme=theme, extra=extra, invert_secondary=inversion)
     ex = Window()
     ex.showMaximized()
     ex.show()
