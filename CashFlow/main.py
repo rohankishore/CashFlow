@@ -1,12 +1,14 @@
 import sys
 
-import qdarktheme
+#import qdarktheme
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon, Qt, QAction
 from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QMainWindow, QPushButton, QVBoxLayout,
                                QWidget, QTabWidget, QSizePolicy)
-
-import Expenses, Incomes, Investments
+from qt_material import apply_stylesheet
+import Expenses
+import Incomes
+import Investments
 
 
 class Window(QMainWindow):
@@ -23,9 +25,13 @@ class Window(QMainWindow):
         menubar = self.menuBar()
         file_menu = menubar.addMenu('Import')
 
-        exit_action = QAction('Expenses', self)
-        exit_action.triggered.connect(self.import_expenses)
-        file_menu.addAction(exit_action)
+        expense_action = QAction('Expenses', self)
+        expense_action.triggered.connect(self.import_expenses)
+        file_menu.addAction(expense_action)
+
+        config_action = QAction('Preferences', self)
+        config_action.triggered.connect(self.import_expenses)
+        menubar.addAction(config_action)
 
         self.exp_widget = Expenses.Expenses()
 
@@ -137,6 +143,9 @@ class Window(QMainWindow):
     def import_expenses(self):
         Expenses.Expenses.import_(self.exp_widget)
 
+    def preferences(self):
+        
+
     def button2(self):
         self.right_widget.setCurrentIndex(1)
 
@@ -176,7 +185,8 @@ class Window(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    qdarktheme.setup_theme("dark")
+    #qdarktheme.setup_theme("dark")
+    apply_stylesheet(app, theme='dark_teal.xml')
     ex = Window()
     ex.showMaximized()
     ex.show()
