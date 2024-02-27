@@ -5,7 +5,6 @@
 <div align="center">
 
   <a href="https://opensource.org/licenses/MIT">![License](https://img.shields.io/badge/License-MIT-yellow)</a>
-  <a href="https://opensource.org/">![Language](https://img.shields.io/badge/Open-Source-blue)</a>
   <a href="https://www.fiverr.com/rohancodespy/">![Demo](https://img.shields.io/badge/Fiverr-Hire-green)</a>
   <a style="text-decoration:none">
     <img src="https://img.shields.io/github/downloads/rohankishore/CashFlow/total.svg"/>
