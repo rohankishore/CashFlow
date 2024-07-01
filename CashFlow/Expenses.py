@@ -4,9 +4,13 @@ import sqlite3
 from PySide6 import QtCore
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QPainter, QBrush, QColor
-from PySide6.QtWidgets import (QHeaderView, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
+from PySide6.QtWidgets import (QHeaderView, QHBoxLayout, QLabel, QTableWidget, QTableWidgetItem,
                                QVBoxLayout,
-                               QWidget, QDateEdit, QComboBox, QDockWidget, QFileDialog, QMessageBox)
+                               QWidget, QDockWidget, QFileDialog, QMessageBox)
+from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import (NavigationInterface, NavigationItemPosition, MessageBox,
+                            isDarkTheme, setTheme, Theme, ComboBox, PushButton,LineEdit, DateEdit,
+                            PopUpAniStackedWidget, setThemeColor)
 from PySide6.QtCharts import QChartView, QPieSeries, QChart
 from tkinter import messagebox
 
@@ -15,7 +19,8 @@ class Expenses(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         self.items = 0
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        # self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setObjectName("Expenses")
 
         EXPENSE_DATABASE_FILE = 'expenses.db'
 
@@ -50,52 +55,21 @@ class Expenses(QWidget):
         self.chart_view.setRenderHint(QPainter.Antialiasing)
 
         # Right Widget
-        self.description = QLineEdit()
-        self.description.setStyleSheet(
-            "QLineEdit {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
-        self.price = QLineEdit()
-        self.price.setStyleSheet(
-            "QLineEdit {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
+        self.description = LineEdit()
 
-        self.payment_mode = QComboBox()
-        self.payment_mode.setStyleSheet(
-            "QComboBox {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
+        self.price = LineEdit()
 
-        self.sortby = QComboBox()
-        self.sortby.setStyleSheet(
-            "QComboBox {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
+
+        self.payment_mode = ComboBox()
+
+        self.sortby = ComboBox()
+
         self.sortby.addItem("Date")
         self.sortby.addItem("Price (Low to High)")
         self.sortby.addItem("Price (High to Low)")
 
-        self.date_picker = QDateEdit()
-        self.date_picker.setStyleSheet(
-            "QDateEdit {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
+        self.date_picker = DateEdit()
+
 
         self.linebreak_widget = QWidget()
         self.linebreak_widget.setFixedHeight(11)
@@ -112,20 +86,14 @@ class Expenses(QWidget):
         self.payment_mode.addItem("Wire Transfer")
         self.payment_mode.addItem("Paypal")
 
-        self.add = QPushButton("Add")
-        self.add.setStyleSheet(
-            "QPushButton {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
+        self.add = PushButton("Add")
+
 
         # Disabling 'Add' button
         self.add.setEnabled(False)
 
         self.right_dock = QDockWidget(self)
-        self.right_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable)
+        self.right_dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.right = QVBoxLayout()
         self.right.addWidget(QLabel("Sort By:"))
         self.right.addWidget(self.sortby)

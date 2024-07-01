@@ -1,6 +1,10 @@
 import sys
 from PySide6.QtGui import QPainter, QBrush, QColor
-from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QSlider, QPushButton, QVBoxLayout, QWidget, QComboBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QSlider, QVBoxLayout, QWidget
+from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import (NavigationInterface, NavigationItemPosition, MessageBox,
+                            isDarkTheme, setTheme, Theme, ComboBox, PushButton,LineEdit,
+                            PopUpAniStackedWidget, setThemeColor)
 from PySide6.QtCore import Qt
 from PySide6.QtCharts import QChartView, QPieSeries, QChart
 
@@ -9,18 +13,14 @@ class Investments(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.setObjectName("Investments")
+
         self.widget = QWidget()
         self.layout = QVBoxLayout(self.widget)
 
         # Create the option combo box
-        self.option_combo = QComboBox()
-        self.option_combo.setStyleSheet(
-            "QComboBox {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
+        self.option_combo = ComboBox()
+
         self.option_combo.addItem("Lumpsum")
         self.option_combo.addItem("Recurring")
         self.option_combo.currentTextChanged.connect(self.updateUI)
@@ -30,42 +30,24 @@ class Investments(QMainWindow):
 
         # Create input labels and fields
         self.amount_label = QLabel("Initial Amount:")
-        self.amount_field = QLineEdit()
-        self.amount_field.setStyleSheet(
-            "QLineEdit {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
+        self.amount_field = LineEdit()
+
         self.amount_slider = QSlider(Qt.Horizontal)
         self.amount_slider.setMinimum(0)
         self.amount_slider.setMaximum(1000000)
         self.amount_slider.valueChanged.connect(self.updateAmountField)
 
         self.interest_label = QLabel("Interest Rate (%):")
-        self.interest_field = QLineEdit()
-        self.interest_field.setStyleSheet(
-            "QLineEdit {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
+        self.interest_field = LineEdit()
+
         self.interest_slider = QSlider(Qt.Horizontal)
         self.interest_slider.setMinimum(0)
         self.interest_slider.setMaximum(35)
         self.interest_slider.valueChanged.connect(self.updateInterestField)
 
         self.years_label = QLabel("Number of Years:")
-        self.years_field = QLineEdit()
-        self.years_field.setStyleSheet(
-            "QLineEdit {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
+        self.years_field = LineEdit()
+
         self.years_slider = QSlider(Qt.Horizontal)
         self.years_slider.setMinimum(0)
         self.years_slider.setMaximum(60)
@@ -87,14 +69,8 @@ class Investments(QMainWindow):
         self.layout.addLayout(self.inputs_layout)
 
         # Create the calculate button
-        self.calculate_button = QPushButton("Calculate")
-        self.calculate_button.setStyleSheet(
-            "QPushButton {"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "background-color: #282c2f;"
-            "}"
-        )
+        self.calculate_button = PushButton("Calculate")
+
         self.calculate_button.clicked.connect(self.calculate)
 
         # Create the result label
