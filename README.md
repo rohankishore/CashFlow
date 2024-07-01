@@ -15,20 +15,10 @@
 Gain financial clarity and peace of mind as you effortlessly track, analyze, and manage your expenses, empowering you to make informed decisions and achieve your financial goals with confidence. Take charge of your cash flow and unlock a brighter financial future.
 
 <br>
-<br>
 
-## Material And Flat Style Theming!
+![image](https://github.com/rohankishore/CashFlow/assets/109947257/3946a92e-f16b-4b34-a153-c8cc1e1868f1)
 
-![image](https://github.com/rohankishore/CashFlow/assets/109947257/f7797bda-6509-4cd8-9efe-a4870ab9c38f)
-
-### OR
-
-![image](https://github.com/rohankishore/CashFlow/assets/109947257/32c917eb-df19-4328-94ac-082a64a2e39e)
-
-<br>
-
-## New Settings Page!
-![image](https://github.com/rohankishore/CashFlow/assets/109947257/07e93781-8d63-4be7-a557-a3d865169987)
+![image](https://github.com/rohankishore/CashFlow/assets/109947257/aa52503b-0cbc-4960-b347-c995d81ee47b)
 
 <br>
 
