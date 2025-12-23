@@ -1,198 +1,340 @@
-# coding:utf-8
 import json
 import sys
+import os
 
-# import qdarktheme
-from PySide6.QtCore import Qt, Signal, QEasingCurve, QUrl
-from PySide6.QtGui import QIcon, QDesktopServices
-from PySide6.QtWidgets import QApplication, QLabel, QHBoxLayout, QVBoxLayout, QFrame
-from qfluentwidgets import FluentIcon as FIF
-from qfluentwidgets import (NavigationInterface, NavigationItemPosition, MessageBox,
-                            isDarkTheme, setTheme, Theme,
-                            PopUpAniStackedWidget, setThemeColor)
-from qframelesswindow import FramelessWindow, TitleBar
-
+import qdarktheme
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QIcon, Qt, QAction
+from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QMainWindow, QPushButton, QVBoxLayout,
+                               QWidget, QTabWidget, QSizePolicy, QDockWidget, QComboBox, QLineEdit, QMessageBox,
+                               QCheckBox)
 import Expenses
 import Incomes
+import Investments
 
+# Get the directory where this script is located
+script_dir = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(script_dir, "resource", "config.json")
 
-APP_NAME = "Cashflow"
-
-with open("resource/Data/config.json", "r") as themes_file:
+with open(config_path, "r") as themes_file:
     _themes = json.load(themes_file)
 
-#theme_color = _themes["theme"]
-#progressive = _themes["progressive"]
 
-
-class StackedWidget(QFrame):
-    """ Stacked widget """
-
-    currentChanged = Signal(int)
-
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
-        self.hBoxLayout = QHBoxLayout(self)
-        self.view = PopUpAniStackedWidget(self)
-
-        self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
-        self.hBoxLayout.addWidget(self.view)
-
-        self.view.currentChanged.connect(self.currentChanged)
-
-    def addWidget(self, widget):
-        """ add widget to view """
-        self.view.addWidget(widget)
-
-    def widget(self, index: int):
-        return self.view.widget(index)
-
-    def setCurrentWidget(self, widget, popOut=False):
-        if not popOut:
-            self.view.setCurrentWidget(widget, duration=300)
-        else:
-            self.view.setCurrentWidget(
-                widget, True, False, 200, QEasingCurve.Type.InQuad)
-
-    def setCurrentIndex(self, index, popOut=False):
-        self.setCurrentWidget(self.view.widget(index), popOut)
-
-
-class CustomTitleBar(TitleBar):
-    """ Title bar with icon and title """
-
-    def __init__(self, parent):
-        super().__init__(parent)
-        # add window icon
-        self.iconLabel = QLabel(self)
-        self.iconLabel.setFixedSize(18, 18)
-        self.hBoxLayout.insertSpacing(0, 10)
-        self.hBoxLayout.insertWidget(
-            1, self.iconLabel, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom)
-        self.window().windowIconChanged.connect(self.setIcon)
-
-        # add title label
-        self.titleLabel = QLabel(self)
-        self.hBoxLayout.insertWidget(
-            2, self.titleLabel, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom)
-        self.titleLabel.setObjectName('titleLabel')
-        self.window().windowTitleChanged.connect(self.setTitle)
-
-    def setTitle(self, title):
-        self.titleLabel.setText(title)
-        self.titleLabel.adjustSize()
-
-    def setIcon(self, icon):
-        self.iconLabel.setPixmap(QIcon(icon).pixmap(18, 18))
-
-
-class Window(FramelessWindow):
-
+class ConfigPage(QWidget):
     def __init__(self):
         super().__init__()
-        self.setTitleBar(CustomTitleBar(self))
 
-        # use dark theme mode
-        setTheme(Theme.DARK)
+        self.json_data = {"editor_theme": "", "margin_theme": "", "lines_theme": ""}
 
-        # change the theme color
-        # setThemeColor(theme_color)
+        self.init_ui()
 
-        self.hBoxLayout = QHBoxLayout(self)
-        self.navigationBar = NavigationInterface(self)
-        self.stackWidget = StackedWidget(self)
+    def init_ui(self):
+        layout = QVBoxLayout()
+        layout.addStretch()
+        # layout.addSpacing(100)
 
-        # create sub interface
-        self.expenseInterface = Expenses.Expenses()
-        self.incomeInterface = Incomes.Incomes()
-        #self.settingsInterface = settings.SettingsPage()
+        theme_label1 = QLabel("Theme :")
+        theme_label2 = QLabel("Theming :")
+        self.theme_combobox = QComboBox()
+        # self.theme_combobox.setCurrentText(self._window._themes["font"])
+        theme_opt = ['dark_amber',
+                     'dark_blue',
+                     'dark_cyan',
+                     'dark_lightgreen',
+                     'dark_pink',
+                     'dark_purple',
+                     'dark_red',
+                     'dark_teal',
+                     'dark_yellow',
+                     'light_amber',
+                     'light_blue',
+                     'light_cyan',
+                     'light_cyan_500',
+                     'light_lightgreen',
+                     'light_pink',
+                     'light_purple',
+                     'light_red',
+                     'light_teal',
+                     'light_yellow']
+        self.theme_combobox.addItems(theme_opt)
 
-        # initialize layout
-        self.initLayout()
+        self.theming_combobox = QComboBox()
+        # self.theme_combobox.setCurrentText(self._window._themes["font"])
+        theming_opt = ['Material (Default)', 'Flat Dark (compatibility issues on Python >=3.11)']
+        self.theming_combobox.addItems(theming_opt)
 
-        # add items to navigation interface
-        self.initNavigation()
+        # current_font_theme = self._window._themes.get("font", "")
+        self.theming_combobox.setCurrentText(_themes["theming"])
+        layout.addWidget(theme_label1)
+        layout.addWidget(self.theme_combobox)
+        layout.addWidget(theme_label2)
+        layout.addWidget(self.theming_combobox)
 
-        self.initWindow()
+        self.invert_secondary = QCheckBox("Invert Secondary (For Light Mode): ")
+        if _themes["invert"] == "true":
+            self.invert_secondary.setChecked(True)
+        else:
+            pass
+        layout.addWidget(self.invert_secondary)
 
-    def initLayout(self):
-        self.hBoxLayout.setSpacing(0)
-        self.hBoxLayout.setContentsMargins(0, 48, 0, 0)
-        self.hBoxLayout.addWidget(self.navigationBar)
-        self.hBoxLayout.addWidget(self.stackWidget)
-        self.hBoxLayout.setStretchFactor(self.stackWidget, 1)
+        # Save Button
+        save_button = QPushButton("Apply")
+        save_button.setStyleSheet(
+            "QPushButton {"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "background-color: #121212;"
+            "color: white;"
+            "}"
+        )
+        save_button.clicked.connect(self.save_json)
+        layout.addWidget(save_button)
 
-    def initNavigation(self):
-        self.addSubInterface(self.expenseInterface, QIcon("resource/Icons/expense.png"), 'Expenses', selectedIcon=QIcon("resource/Icons/expense.png"))
-        self.addSubInterface(self.incomeInterface, QIcon("resource/Icons/income.png"), 'Incomes', selectedIcon=QIcon("resource/Icons/income.png"))
+        self.setLayout(layout)
+        self.setWindowTitle("Settings")
 
-       # self.addSubInterface(self.settingsInterface, FIF.SETTING, 'Settings', NavigationItemPosition.BOTTOM,
-       #                      FIF.SETTING)
-        self.navigationBar.addItem(
-            routeKey='About',
-            icon=FIF.HELP,
-            text='About',
-            onClick=self.showMessageBox,
-            selectable=False,
-            position=NavigationItemPosition.BOTTOM,
+    def save_json(self):
+        _themes["theme_type"] = self.theme_combobox.currentText()
+        if self.invert_secondary.isChecked():
+            _themes["invert"] = "true"
+        else:
+            _themes["invert"] = "false"
+        _themes["theming"] = self.theming_combobox.currentText()
+
+        with open("resource/config.json", "w") as json_file:
+            json.dump(_themes, json_file)
+
+        QMessageBox.information(
+            self,
+            "Settings Applied!",
+            "The chosen settings have been applied. Restart Aura Text to see the changes.",
         )
 
-        self.stackWidget.currentChanged.connect(self.onCurrentInterfaceChanged)
-        self.navigationBar.setCurrentItem(self.expenseInterface.objectName())
 
-    def initWindow(self):
-        self.resize(1000, 600)
-        self.setWindowIcon(QIcon('resources/icons/icon.png'))
-        self.setWindowTitle('Cashflow')
-        self.setQss()
+class Window(QMainWindow):
+    def __init__(self):
+        super().__init__()
 
-    def addSubInterface(self, interface, icon, text: str, position=NavigationItemPosition.TOP, selectedIcon=None):
-        """ add sub interface """
-        self.stackWidget.addWidget(interface)
-        self.navigationBar.addItem(
-            routeKey=interface.objectName(),
-            icon=icon,
-            text=text,
-            onClick=lambda: self.switchTo(interface),
-            position=position,
-        )
+        self.setWindowTitle('CashFlow')
 
-    def setQss(self):
-        color = 'dark' if isDarkTheme() else 'light'
-        with open(f'resource/{color}/demo.qss', encoding='utf-8') as f:
-            self.setStyleSheet(f.read())
+        self.Width = 800
+        self.height = int(0.618 * self.Width)
+        self.resize(self.Width, self.height)
 
-    def switchTo(self, widget):
-        self.stackWidget.setCurrentWidget(widget)
+        # Menu Bar
+        menubar = self.menuBar()
+        file_menu = menubar.addMenu('Import')
 
-    def onCurrentInterfaceChanged(self, index):
-        widget = self.stackWidget.widget(index)
-        self.navigationBar.setCurrentItem(widget.objectName())
+        expense_action = QAction('Expenses', self)
+        expense_action.triggered.connect(self.import_expenses)
+        file_menu.addAction(expense_action)
 
-    def showMessageBox(self):
-        text_for_about = f"Heya! it's Rohan, the creator of {APP_NAME}. I hope you've enjoyed using this app as much as I enjoyed making it." + "" + "\n" + "\n" \
-                                                                                                                                                            "I'm a school student and I can't earn my own money LEGALLY. So any donations will be largely appreciated. Also, if you find any bugs / have any feature requests, you can open a Issue/ Pull Request in the Repo." \
-                                                                                                                                                            "You can visit GitHub by pressing the button below. You can find Ko-Fi link there :) " + "\n" + "\n" + \
-                         f"Once again, thank you for using {APP_NAME}. Please consider giving it a star ⭐ as it will largely motivate me to create more of such apps. Also do consider giving me a follow ;) "
-        w = MessageBox(
-            APP_NAME,
-            text_for_about,
-            self
-        )
-        w.yesButton.setText('GitHub')
-        w.cancelButton.setText('Return')
+        config_action = QAction('Preferences', self)
+        config_action.triggered.connect(self.preferences)
+        menubar.addAction(config_action)
 
-        if w.exec():
-            QDesktopServices.openUrl(QUrl("https://github.com/rohankishore/Cashflow"))
+        self.exp_widget = Expenses.Expenses()
 
+        self.btn_1 = QPushButton(self)
+        self.btn_2 = QPushButton(self)
+        self.btn_3 = QPushButton(self)
+
+        expense_icon = QIcon(os.path.join(script_dir, 'assets', 'expense.png'))
+        self.btn_1.setIcon(expense_icon)
+        self.btn_1.setIconSize(QSize(50, 50))
+        self.btn_1.setFixedSize(50, 50)
+        self.btn_1.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background-color: transparent;
+            }
+            QPushButton:hover {
+                background-color: #4e5157;
+                border-radius: 5px;
+            }
+        """)
+
+        income_icon = QIcon(os.path.join(script_dir, 'assets', 'income.png'))
+        self.btn_2.setIcon(income_icon)
+        self.btn_2.setIconSize(QSize(55, 55))
+        self.btn_2.setFixedSize(55, 55)
+        self.btn_2.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background-color: transparent;
+            }
+            QPushButton:hover {
+                background-color: #4e5157;
+                border-radius: 5px;
+            }
+        """)
+
+        investment_icon = QIcon(os.path.join(script_dir, 'assets', 'investment.png'))
+        self.btn_3.setIcon(investment_icon)
+        self.btn_3.setIconSize(QSize(50, 50))
+        self.btn_3.setFixedSize(50, 50)
+        self.btn_3.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background-color: transparent;
+            }
+            QPushButton:hover {
+                background-color: #4e5157;
+                border-radius: 5px;
+            }
+        """)
+
+        self.linebreak_widget = QWidget()
+        self.linebreak_widget.setFixedHeight(20)  # Adjust the height as needed
+
+        self.btn_1.clicked.connect(self.button1)
+        self.btn_2.clicked.connect(self.button2)
+        self.btn_3.clicked.connect(self.button3)
+
+        self.btn_1.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.btn_2.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.btn_3.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.tab1 = self.expenses(self)
+        self.tab2 = self.incomes(self)
+        self.tab3 = self.investments(self)
+        self.initUI()
+
+    def initUI(self):
+        left_layout = QVBoxLayout()
+        left_widget = QWidget()
+        left_widget.setFixedWidth(100)
+        left_widget.setStyleSheet("""
+            QWidget {
+                background-color: #2b2d30;
+                border-right: 1px solid #3c3f41;
+            }
+        """)
+        
+        left_layout.addWidget(self.btn_1)
+        l1 = QLabel("Expenses")
+        l1.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        l1.setStyleSheet("color: #bbbbbb; font-size: 11px; padding: 5px;")
+        left_layout.addWidget(l1)
+        left_layout.addWidget(self.linebreak_widget)
+        left_layout.addWidget(self.btn_2)
+        l2 = QLabel("Incomes")
+        l2.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        l2.setStyleSheet("color: #bbbbbb; font-size: 11px; padding: 5px;")
+        left_layout.addWidget(l2)
+        left_layout.addWidget(self.linebreak_widget)
+        left_layout.addWidget(self.btn_3)
+        l3 = QLabel("Investments")
+        l3.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        l3.setStyleSheet("color: #bbbbbb; font-size: 11px; padding: 5px;")
+        left_layout.addWidget(l3)
+        left_layout.addStretch(1)
+        left_layout.setSpacing(2)
+        left_widget.setLayout(left_layout)
+
+        self.right_widget = QTabWidget()
+        self.right_widget.tabBar().setObjectName("mainTab")
+
+        self.right_widget.addTab(self.tab1, '')
+        self.right_widget.addTab(self.tab2, '')
+        self.right_widget.addTab(self.tab3, '')
+
+        self.right_widget.setCurrentIndex(0)
+        self.right_widget.setStyleSheet('''QTabBar::tab{width: 0; \
+            height: 0; margin: 0; padding: 0; border: none; background-color: 191919;}''')
+
+        main_layout = QHBoxLayout()
+        main_layout.addWidget(left_widget)
+        main_layout.addWidget(self.right_widget)
+        main_layout.setStretch(0, 0)
+        main_layout.setStretch(1, 1)
+        main_widget = QWidget()
+        # main_widget.setStyleSheet("background-color: #000000; color: white; border: none;")
+        main_widget.setStyleSheet(
+            ("*{color: qlineargradient(spread: pad, x1: 0 y1: 0, x2: 1 y2: 0, stop:0 rgba(0, 0, 0, 255), "
+             "stop:1 rgba(255, 255, 255, 255)); "
+             "background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #191b1f, "
+             "stop:1 #191b1f, stop:2 #282c2f); color: white; border: none}"))
+
+        main_widget.setLayout(main_layout)
+        self.setCentralWidget(main_widget)
+
+    def button1(self):
+        self.right_widget.setCurrentIndex(0)
+
+    def import_expenses(self):
+        Expenses.Expenses.import_(self.exp_widget)
+
+    def preferences(self):
+        config_dock = QDockWidget("Preferences", self)
+        config_dock.setMinimumWidth(200)
+
+        self.settings_widget = ConfigPage()
+        self.settings_layout = QVBoxLayout(self.settings_widget)
+        self.settings_layout.addWidget(self.settings_widget)
+        config_dock.setWidget(self.settings_widget)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, config_dock)
+
+    def button2(self):
+        self.right_widget.setCurrentIndex(1)
+
+    def button3(self):
+        self.right_widget.setCurrentIndex(2)
+
+    def button4(self):
+        self.right_widget.setCurrentIndex(3)
+
+    @staticmethod
+    def expenses(self):
+        main_layout = QVBoxLayout()
+        exp_widget = Expenses.Expenses()
+        main_layout.addWidget(exp_widget)
+        main = QWidget()
+        main.setLayout(main_layout)
+        return main
+
+    @staticmethod
+    def incomes(self):
+        main_layout = QVBoxLayout()
+        inc_widget = Incomes.Incomes()
+        main_layout.addWidget(inc_widget)
+        main = QWidget()
+        main.setLayout(main_layout)
+        return main
+
+    @staticmethod
+    def investments(self):
+        main_layout = QVBoxLayout()
+        inv_widget = Investments.Investments()
+        main_layout.addWidget(inv_widget)
+        main = QWidget()
+        main.setLayout(main_layout)
+        return main
+
+
+extra = {
+    # Button colors
+    'danger': '#dc3545',
+    'warning': '#ffc107',
+    'success': '#17a2b8',
+    # Font
+    'font_family': 'Consolas',
+}
+
+inversion = False
+if _themes["invert"] == "true":
+    inversion = True
+else:
+    inversion = False
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    QApplication.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-
-    #qdarktheme.enable_hi_dpi()
-    w = Window()
-    #qdarktheme.setup_theme("dark", custom_colors={"primary": theme_color})
-    w.show()
+    theme = (_themes["theme_type"] + ".xml")
+    theming = _themes["theming"]
+    if theming == "Flat Dark (compatibility issues on Python >=3.11)":
+        #import pywinstyles
+        qdarktheme.setup_theme("dark")
+    ex = Window()
+    ex.showMaximized()
+    ex.show()
     sys.exit(app.exec())

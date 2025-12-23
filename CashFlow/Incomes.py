@@ -1,27 +1,22 @@
 import sqlite3
+import os
 
 from PySide6 import QtCore
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QPainter, QBrush, QColor
-from PySide6.QtWidgets import (QHeaderView, QHBoxLayout, QLabel, QTableWidget, QTableWidgetItem,
-                               QVBoxLayout,
-                               QWidget, QDateEdit, QDockWidget, QFileDialog, QMessageBox)
-from qfluentwidgets import FluentIcon as FIF, DateEdit
-from qfluentwidgets import (NavigationInterface, NavigationItemPosition, MessageBox,
-                            isDarkTheme, setTheme, Theme, ComboBox, PushButton, LineEdit,
-                            PopUpAniStackedWidget, setThemeColor)
+from PySide6.QtWidgets import (QHeaderView, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout,
+                               QWidget, QDateEdit, QComboBox)
 from PySide6.QtCharts import QChartView, QPieSeries, QChart
 from tkinter import messagebox
-
 
 class Incomes(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         self.items = 0
 
-        self.setObjectName("Incomes")
-
-        INCOMES_DATABASE_FILE = "resource/Data/incomes.db"
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        INCOMES_DATABASE_FILE = os.path.join(script_dir, "resource", "incomes.db")
 
         self.connection = sqlite3.connect(INCOMES_DATABASE_FILE)
         self.cursor = self.connection.cursor()
@@ -46,27 +41,61 @@ class Incomes(QWidget):
         # Chart
         self.chart_view = QChartView()
 
+
         self.chart_view.setRenderHint(QPainter.Antialiasing)
 
         # Right Widget
-        self.description = LineEdit()
-        self.price = LineEdit()
-        self.payment_mode = ComboBox()
+        self.description = QLineEdit()
+        self.price = QLineEdit()
+        self.payment_mode = QComboBox()
         self.date_picker = QDateEdit()
 
-        self.description = LineEdit()
+        self.description = QLineEdit()
+        self.description.setStyleSheet(
+            "QLineEdit {"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "background-color: #282c2f;"
+            "}"
+        )
+        self.price = QLineEdit()
+        self.price.setStyleSheet(
+            "QLineEdit {"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "background-color: #282c2f;"
+            "}"
+        )
 
-        self.price = LineEdit()
+        self.payment_mode = QComboBox()
+        self.payment_mode.setStyleSheet(
+            "QComboBox {"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "background-color: #282c2f;"
+            "}"
+        )
 
-        self.payment_mode = ComboBox()
+        self.sortby = QComboBox()
+        self.sortby.setStyleSheet(
+            "QComboBox {"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "background-color: #282c2f;"
+            "}"
+        )
+        self.sortby.addItem("Date")
+        self.sortby.addItem("Price (Low to High)")
+        self.sortby.addItem("Price (High to Low)")
 
-        self.sort_by = ComboBox()
-
-        self.sort_by.addItem("Date")
-        self.sort_by.addItem("Price (Low to High)")
-        self.sort_by.addItem("Price (High to Low)")
-
-        self.date_picker = DateEdit()
+        self.date_picker = QDateEdit()
+        self.date_picker.setStyleSheet(
+            "QDateEdit {"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "background-color: #282c2f;"
+            "}"
+        )
 
         self.linebreak_widget = QWidget()
         self.linebreak_widget.setFixedHeight(11)
@@ -80,14 +109,22 @@ class Incomes(QWidget):
         self.payment_mode.addItem("Bank Transfer")
         self.payment_mode.addItem("Payoneer")
 
-        self.add = PushButton("Add")
+        self.add = QPushButton("Add")
+        self.add.setStyleSheet(
+            "QPushButton {"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "background-color: #282c2f;"
+            "}"
+        )
+
 
         # Disabling 'Add' button
         self.add.setEnabled(False)
 
         self.right = QVBoxLayout()
         self.right.addWidget(QLabel("Sort By:"))
-        self.right.addWidget(self.sort_by)
+        self.right.addWidget(self.sortby)
         self.right.addWidget(self.linebreak_widget)
         self.right.addWidget(QLabel("Income Source"))
         self.right.addWidget(self.description)
@@ -158,7 +195,6 @@ class Incomes(QWidget):
             self.plot_data()
         except ValueError:
             messagebox.showerror("Invalid Amount!", "Invalid Amount:", price, "Make sure to enter a valid amount!")
-
     @Slot()
     def check_disable(self, x):
         if not self.description.text() or not self.price.text() or not self.payment_mode.currentText():
@@ -180,7 +216,7 @@ class Incomes(QWidget):
                 series.append(text, number)
 
         chart = QChart()
-        # chart.setBackgroundBrush(QBrush(QColor("#3c3c3c")))
+        chart.setBackgroundBrush(QBrush(QColor("#191b1f")))
         legend = chart.legend()
         legend.setBrush(QBrush(QColor("#FFFFFF")))
         chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
@@ -197,7 +233,7 @@ class Incomes(QWidget):
             price_item = QTableWidgetItem(f"{price:.2f}")
             payment_mode_item = QTableWidgetItem(mode)
 
-            # payment_mode_item = QTableWidgetItem(mode)
+            #payment_mode_item = QTableWidgetItem(mode)
             date_item = QTableWidgetItem(date)
 
             description_item.setTextAlignment(Qt.AlignCenter)

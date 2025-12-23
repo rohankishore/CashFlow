@@ -1,28 +1,27 @@
 import csv
 import sqlite3
+import os
 
 from PySide6 import QtCore
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter, QBrush, QColor
-from PySide6.QtWidgets import (QHeaderView, QHBoxLayout, QLabel, QTableWidget, QTableWidgetItem,
-                               QVBoxLayout,
-                               QWidget, QDockWidget, QFileDialog, QMessageBox)
-from qfluentwidgets import FluentIcon as FIF
-from qfluentwidgets import (NavigationInterface, NavigationItemPosition, MessageBox,
-                            isDarkTheme, setTheme, Theme, ComboBox, PushButton,LineEdit, DateEdit,
-                            PopUpAniStackedWidget, setThemeColor)
-from PySide6.QtCharts import QChartView, QPieSeries, QChart
+from PySide6.QtWidgets import (QHeaderView, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
+                             QVBoxLayout,
+                             QWidget, QDateEdit, QComboBox, QDockWidget, QFileDialog, QMessageBox)
+from PySide6.QtCharts import QChartView, QPieSeries, QChart, QLineSeries
 from tkinter import messagebox
 
 
 class Expenses(QWidget):
     def __init__(self):
+
         QWidget.__init__(self)
         self.items = 0
-        # self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setObjectName("Expenses")
+#        self.setAttribute(Qt.WA_TranslucentBackground)
 
-        EXPENSE_DATABASE_FILE = 'expenses.db'
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        EXPENSE_DATABASE_FILE = os.path.join(script_dir, 'resource', 'expenses.db')
 
         # SQLite connection
         self.connection = sqlite3.connect(EXPENSE_DATABASE_FILE)
@@ -45,31 +44,114 @@ class Expenses(QWidget):
         # Left Widget
         self.table = QTableWidget()
 
-        # self.table.setStyleSheet("QTableView {background-color: #1a1c20; color: white;}""QHeaderView::section {background-color: #161618; color: white;}")
+        self.table.setStyleSheet("""
+            QTableWidget {
+                background-color: #1e1e1e;
+                color: #e0e0e0;
+                gridline-color: #3c3f41;
+                border: none;
+            }
+            QHeaderView::section {
+                background-color: #2b2d30;
+                color: #bbbbbb;
+                padding: 8px;
+                border: none;
+                border-bottom: 2px solid #3c3f41;
+                font-weight: bold;
+            }
+            QTableWidget::item {
+                padding: 5px;
+            }
+            QTableWidget::item:selected {
+                background-color: #4e5157;
+            }
+        """)
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Description", "Price", "Payment Mode", "Date"])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         # Chart
         self.chart_view = QChartView()
-        self.chart_view.setRenderHint(QPainter.Antialiasing)
+        self.chart_view.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         # Right Widget
-        self.description = LineEdit()
+        self.description = QLineEdit()
+        self.description.setStyleSheet("""
+            QLineEdit {
+                border-radius: 8px;
+                padding: 8px;
+                background-color: #2b2d30;
+                color: #e0e0e0;
+                border: 1px solid #3c3f41;
+            }
+            QLineEdit:focus {
+                border: 1px solid #4a9eff;
+            }
+        """)
+        self.price = QLineEdit()
+        self.price.setStyleSheet("""
+            QLineEdit {
+                border-radius: 8px;
+                padding: 8px;
+                background-color: #2b2d30;
+                color: #e0e0e0;
+                border: 1px solid #3c3f41;
+            }
+            QLineEdit:focus {
+                border: 1px solid #4a9eff;
+            }
+        """)
 
-        self.price = LineEdit()
+        self.payment_mode = QComboBox()
+        self.payment_mode.setStyleSheet("""
+            QComboBox {
+                border-radius: 8px;
+                padding: 8px;
+                background-color: #2b2d30;
+                color: #e0e0e0;
+                border: 1px solid #3c3f41;
+            }
+            QComboBox:hover {
+                border: 1px solid #4a9eff;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+        """)
 
-
-        self.payment_mode = ComboBox()
-
-        self.sortby = ComboBox()
-
+        self.sortby = QComboBox()
+        self.sortby.setStyleSheet("""
+            QComboBox {
+                border-radius: 8px;
+                padding: 8px;
+                background-color: #2b2d30;
+                color: #e0e0e0;
+                border: 1px solid #3c3f41;
+            }
+            QComboBox:hover {
+                border: 1px solid #4a9eff;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+        """)
         self.sortby.addItem("Date")
         self.sortby.addItem("Price (Low to High)")
         self.sortby.addItem("Price (High to Low)")
 
-        self.date_picker = DateEdit()
-
+        self.date_picker = QDateEdit()
+        self.date_picker.setStyleSheet("""
+            QDateEdit {
+                border-radius: 8px;
+                padding: 8px;
+                background-color: #2b2d30;
+                color: #e0e0e0;
+                border: 1px solid #3c3f41;
+            }
+            QDateEdit:hover {
+                border: 1px solid #4a9eff;
+            }
+        """)
 
         self.linebreak_widget = QWidget()
         self.linebreak_widget.setFixedHeight(11)
@@ -86,25 +168,57 @@ class Expenses(QWidget):
         self.payment_mode.addItem("Wire Transfer")
         self.payment_mode.addItem("Paypal")
 
-        self.add = PushButton("Add")
-
+        self.add = QPushButton("Add")
+        self.add.setStyleSheet("""
+            QPushButton {
+                border-radius: 8px;
+                padding: 10px;
+                background-color: #4a9eff;
+                color: white;
+                font-weight: bold;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #357abd;
+            }
+            QPushButton:disabled {
+                background-color: #3c3f41;
+                color: #777;
+            }
+        """)
 
         # Disabling 'Add' button
         self.add.setEnabled(False)
 
         self.right_dock = QDockWidget(self)
-        self.right_dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+        self.right_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable)
         self.right = QVBoxLayout()
-        self.right.addWidget(QLabel("Sort By:"))
+        label_style = "color: #bbbbbb; font-size: 12px; font-weight: bold; padding-top: 10px;"
+        
+        sort_label = QLabel("Sort By:")
+        sort_label.setStyleSheet(label_style)
+        self.right.addWidget(sort_label)
         self.right.addWidget(self.sortby)
         self.right.addWidget(self.linebreak_widget)
-        self.right.addWidget(QLabel("Reason of Expense"))
+        
+        desc_label = QLabel("Reason of Expense")
+        desc_label.setStyleSheet(label_style)
+        self.right.addWidget(desc_label)
         self.right.addWidget(self.description)
-        self.right.addWidget(QLabel("Price"))
+        
+        price_label = QLabel("Price")
+        price_label.setStyleSheet(label_style)
+        self.right.addWidget(price_label)
         self.right.addWidget(self.price)
-        self.right.addWidget(QLabel("Payment Mode"))
+        
+        payment_label = QLabel("Payment Mode")
+        payment_label.setStyleSheet(label_style)
+        self.right.addWidget(payment_label)
         self.right.addWidget(self.payment_mode)
-        self.right.addWidget(QLabel("Date of Expense"))
+        
+        date_label = QLabel("Date of Expense")
+        date_label.setStyleSheet(label_style)
+        self.right.addWidget(date_label)
         self.right.addWidget(self.date_picker)
         self.right.addWidget(self.add)
         self.right.addWidget(self.chart_view)
@@ -117,9 +231,14 @@ class Expenses(QWidget):
         self.layout = QHBoxLayout()
         self.layout.addWidget(self.table)
         self.layout.addWidget(self.right_dock)
-        #self.layout.addLayout(self.right)
+        # self.layout.addLayout(self.right)
 
         self.setLayout(self.layout)
+
+        # Initialize data after all UI components are created
+        self.fill_table()
+        self.plot_data()
+        self.plot_history_graph()
 
         self.sortby.currentTextChanged.connect(self.sort_by_func)
         self.add.clicked.connect(self.add_element)
@@ -127,21 +246,18 @@ class Expenses(QWidget):
         self.price.textChanged[str].connect(self.check_disable)
         self.payment_mode.currentTextChanged[str].connect(self.check_disable)
 
-        self.fill_table()
-        self.plot_data()
-
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key.Key_Delete:
             self.clear_element()
         else:
             super().keyPressEvent(event)
 
-    @Slot()
+    # @Slot()
     def add_element(self):
         des = self.description.text()
         price = self.price.text()
         mode = self.payment_mode.currentText()
-        date = self.date_picker.date().toString(Qt.ISODate)
+        date = self.date_picker.date().toString(Qt.DateFormat.ISODate)
 
         try:
             price = float(price)
@@ -175,9 +291,41 @@ class Expenses(QWidget):
         except ValueError:
             messagebox.showerror("Invalid Price!", "Invalid Price:", price, "Make sure to enter a valid price!")
 
+    def plot_history_graph(self):
+        # Clear any existing series from the chart
+        chart = QChart()
+        chart.setBackgroundBrush(QBrush(QColor("#191b1f")))  # Set background brush
+
+        # Create a line series for the history graph
+        series = QLineSeries()
+        series.setName("Expense History")  # Set series name
+
+        # Retrieve data from the database for plotting
+        self.cursor.execute("SELECT date, price FROM expenses ORDER BY date")
+        expense_data = self.cursor.fetchall()
+
+        # Populate the line series with data
+        for index, (date, price) in enumerate(expense_data):
+            # Use index as x-axis value and price as y-axis value
+            series.append(float(index), float(price))
+
+        # Add the series to the chart
+        chart.addSeries(series)
+
+        # Set chart title and axes labels
+        chart.setTitle("Expense History")
+        chart.createDefaultAxes()
+
+        # Set the chart to the chart view
+        self.chart_view.setChart(chart)
+
+        # Adjust chart appearance if needed
+        # (e.g., set background color, legend position, axis labels, etc.)
+
     def import_(self):
 
-        reply = QMessageBox.question(self, 'Wait a Min!', 'Are the column names included in the file>?', QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        reply = QMessageBox.question(self, 'Wait a Min!', 'Are the column names included in the file>?',
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                      QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -192,7 +340,7 @@ class Expenses(QWidget):
                     cursor = self.connection.cursor()
                     for data in reader:
                         cursor.execute(query, data)
-                    cursor.commit()
+                    self.connection.commit()
             else:
                 pass
         else:
@@ -208,28 +356,22 @@ class Expenses(QWidget):
                     cursor.execute(query, data)
                     for data in reader:
                         cursor.execute(query, data)
-                    cursor.commit()
+                    self.connection.commit()
             else:
                 pass
 
-
-
-    @Slot()
     def check_disable(self, x):
         if not self.description.text() or not self.price.text() or not self.payment_mode.currentText():
             self.add.setEnabled(False)
         else:
             self.add.setEnabled(True)
 
-    @Slot()
     def sort_by_date_clicked(self):
         self.table.sortItems(3, Qt.SortOrder.AscendingOrder)  # Sort by date column (index 3) in ascending order
 
-    @Slot()
     def sort_by_price_htl_clicked(self):
         self.table.sortItems(1, Qt.SortOrder.AscendingOrder)  # Sort by price column (index 1) in ascending order
 
-    @Slot()
     def sort_by_price_lth_clicked(self):
         self.table.sortItems(1, Qt.SortOrder.AscendingOrder)  # Sort by price column (index 1) in ascending order
 
@@ -242,7 +384,6 @@ class Expenses(QWidget):
         else:
             self.sort_by_price_lth_clicked()
 
-    @Slot()
     def plot_data(self):
         series = QPieSeries()
 
@@ -261,7 +402,7 @@ class Expenses(QWidget):
         legend.setBrush(QBrush(QColor("#FFFFFF")))
         chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
         chart.addSeries(series)
-        chart.legend().setAlignment(Qt.AlignLeft)
+        chart.legend().setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.chart_view.setChart(chart)
 
     def fill_table(self):
@@ -287,7 +428,6 @@ class Expenses(QWidget):
 
             self.items += 1
 
-    @Slot()
     def clear_element(self):
         selected_rows = [index.row() for index in self.table.selectedIndexes()]
 
@@ -316,7 +456,6 @@ class Expenses(QWidget):
             self.table.removeRow(row)
             self.plot_data()
 
-    @Slot()
     def clear_table(self):
         self.table.setRowCount(0)
         self.items = 0

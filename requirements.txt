@@ -1,4 +1,3 @@
 PySide6
 pyqtdarktheme
-qt-material
 sqlite3
